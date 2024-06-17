@@ -1,0 +1,55 @@
+service: aws-node-rest-api-project
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: ap-northeast-2
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        # dynamodb: PUT 가능
+        - dynamodb:*
+      Resource:
+        # 생성된 dynamodb의 arn
+        - arn:aws:dynamodb:ap-northeast-2:225047281420:table/TodoTable
+
+functions:
+  addTodo:
+    handler: src/addTodo.handler
+    events:
+      - httpApi:
+          path: /
+          method: post
+  fetchTodos:
+    handler: src/fetchTodos.handler
+    events:
+      - httpApi:
+          path: /todos
+          method: get
+  fetchTodo:
+    handler: src/fetchTodo.handler
+    events:
+      - httpApi:
+          path: /todo/{id}
+          method: get
+  updateTodo:
+    handler: src/updateTodo.handler
+    events:
+      - httpApi:
+          path: /todo/{id}
+          method: put
+
+resources: # CloudFormation template syntax
+  Resources:
+    TodoTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: TodoTable
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
